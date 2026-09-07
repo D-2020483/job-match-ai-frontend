@@ -12,16 +12,29 @@ import { Send, Briefcase, Loader2, Sparkles } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import React, { useState } from "react";
+import { countWords } from "@/utils/format";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
-function ApplicationDialog({ jobId, jobTitle }) {
+const MIN_WORDS = 100;
+
+function ApplicationDialog({ jobTitle }) {
+  const { isAuthenticated } = useAuth();
   const [coverLetter, setCoverLetter] = useState("");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [hasApplied, setHasApplied] = useState(false);
   const [aiMatch, setAiMatch] = useState(null);
+  const wordCount = countWords(coverLetter);
+  const wordProgress = Math.min(100, (wordCount / MIN_WORDS) * 100);
 
   const handleSubmit = async () => {
+    if (!isAuthenticated) {
+      setError("Please login to apply for this job.");
+      return;
+    }
+
     try {
       setLoading(true);
       setError("");
@@ -46,6 +59,7 @@ function ApplicationDialog({ jobId, jobTitle }) {
 
       setAiMatch(data.cover_letter_match);
       setHasApplied(true);
+      toast.success("Application evaluated successfully");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -56,8 +70,8 @@ function ApplicationDialog({ jobId, jobTitle }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="ml-4 bg-indigo-600 hover:bg-indigo-700">
-          {hasApplied ? "View Rankings" : "Apply Now"}
+        <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700">
+          {hasApplied ? "View Match" : "Apply Now"}
         </Button>
       </DialogTrigger>
 
@@ -72,10 +86,14 @@ function ApplicationDialog({ jobId, jobTitle }) {
           </DialogDescription>
         </DialogHeader>
 
-        {/* Cover Letter Input */}
         {!hasApplied && (
           <div className="space-y-2">
-            <Label htmlFor="coverLetter">Cover Letter</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="coverLetter">Cover Letter</Label>
+              <span className={`text-xs ${wordCount >= MIN_WORDS ? "text-green-600" : "text-gray-500"}`}>
+                {wordCount}/{MIN_WORDS} words
+              </span>
+            </div>
             <Textarea
               id="coverLetter"
               rows={12}
@@ -83,10 +101,15 @@ function ApplicationDialog({ jobId, jobTitle }) {
               onChange={(e) => setCoverLetter(e.target.value)}
               placeholder="Write your application. This content will be evaluated by AI."
             />
+            <div className="h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
+              <div
+                className={`h-full rounded-full transition-all ${wordCount >= MIN_WORDS ? "bg-green-500" : "bg-indigo-500"}`}
+                style={{ width: `${wordProgress}%` }}
+              />
+            </div>
           </div>
         )}
 
-        {/* Loading */}
         {loading && (
           <div className="flex items-center justify-center gap-2 text-indigo-600 py-4">
             <Loader2 className="animate-spin" />
@@ -124,14 +147,13 @@ function ApplicationDialog({ jobId, jobTitle }) {
           </div>
         )}
 
-        {/* Error Message */}
         {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
 
         <DialogFooter>
           {!hasApplied ? (
             <Button
               onClick={handleSubmit}
-              disabled={coverLetter.trim().split(/\s+/).length < 100 || loading}
+              disabled={wordCount < MIN_WORDS || loading}
               className="bg-indigo-600 hover:bg-indigo-700"
             >
               <Send className="mr-2 h-4 w-4" />

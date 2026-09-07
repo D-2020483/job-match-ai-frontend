@@ -68,7 +68,7 @@ function RankingDialog({ jobId, jobTitle }) {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="ml-2 border-green-600 text-green-600 hover:bg-green-50">
+        <Button size="sm" variant="outline" className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-950/30">
           <Trophy className="mr-2 h-4 w-4" />
           View Rankings
         </Button>

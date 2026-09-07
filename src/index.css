@@ -114,7 +114,16 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    scroll-behavior: smooth;
+  }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+@layer utilities {
+  .page-shell {
+    @apply min-h-[calc(100vh-64px)] bg-gray-50 dark:bg-gray-950 p-6 transition-colors;
   }
 }

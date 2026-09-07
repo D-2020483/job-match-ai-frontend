@@ -4,8 +4,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Send, Briefcase, Newspaper } from "lucide-react";
+import { Send, Briefcase, Newspaper, Loader2 } from "lucide-react";
 import { API_BASE, getAuthHeaders } from "@/utils/api";
+import { toast } from "sonner";
 
 function CreatePostForm({ onPostCreated }) {
   const [postType, setPostType] = useState("text");
@@ -26,7 +27,7 @@ function CreatePostForm({ onPostCreated }) {
       if (!content.trim()) return;
     } else {
       if (!jobData.title.trim() || !jobData.company.trim() || !jobData.requirements.trim() || !jobData.location.trim()) {
-        alert("Please fill in all required fields for the job post.");
+        toast.error("Please fill in all required fields for the job post.");
         return;
       }
     }
@@ -57,11 +58,10 @@ function CreatePostForm({ onPostCreated }) {
           description: "",
         });
       }
-      alert(`${postType === "text" ? "Text Post" : "Job Post"} created successfully!`);
+      toast.success(`${postType === "text" ? "Text Post" : "Job Post"} created successfully!`);
       if (onPostCreated) onPostCreated();
-
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -77,12 +77,12 @@ function CreatePostForm({ onPostCreated }) {
 
       <CardContent>
         <div className="mb-4 flex space-x-2">
-          <Button variant={postType === "text" ? "default" : "outline"} onClick={() => setPostType("text")}>
+          <Button variant={postType === "text" ? "default" : "outline"} onClick={() => setPostType("text")} className={postType === "text" ? "bg-indigo-600 hover:bg-indigo-700" : ""}>
             <Newspaper className="mr-2 h-4 w-4" />
             Text Post
           </Button>
 
-          <Button variant={postType === "job" ? "default" : "outline"} onClick={() => setPostType("job")}>
+          <Button variant={postType === "job" ? "default" : "outline"} onClick={() => setPostType("job")} className={postType === "job" ? "bg-indigo-600 hover:bg-indigo-700" : ""}>
             <Briefcase className="mr-2 h-4 w-4" />
             Job Post
           </Button>
@@ -90,13 +90,16 @@ function CreatePostForm({ onPostCreated }) {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {postType === "text" ? (
-            <Textarea
-              placeholder="What's on your mind?"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              rows={8}
-              required
-            />
+            <div className="space-y-2">
+              <Textarea
+                placeholder="What's on your mind?"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                rows={8}
+                required
+              />
+              <p className="text-right text-xs text-gray-400">{content.length} characters</p>
+            </div>
           ) : (
             <div className="space-y-4">
               <div className="flex flex-col gap-1">
@@ -110,26 +113,28 @@ function CreatePostForm({ onPostCreated }) {
                 />
               </div>
 
-              <div className="flex flex-col gap-1">
-                <Label htmlFor="company">Company</Label>
-                <Input
-                  id="company"
-                  placeholder="Enter company name"
-                  value={jobData.company}
-                  onChange={(e) => setJobData({ ...jobData, company: e.target.value })}
-                  required
-                />
-              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="flex flex-col gap-1">
+                  <Label htmlFor="company">Company</Label>
+                  <Input
+                    id="company"
+                    placeholder="Enter company name"
+                    value={jobData.company}
+                    onChange={(e) => setJobData({ ...jobData, company: e.target.value })}
+                    required
+                  />
+                </div>
 
-              <div className="flex flex-col gap-1">
-                <Label htmlFor="location">Location</Label>
-                <Input
-                  id="location"
-                  placeholder="Enter location"
-                  value={jobData.location}
-                  onChange={(e) => setJobData({ ...jobData, location: e.target.value })}
-                  required
-                />
+                <div className="flex flex-col gap-1">
+                  <Label htmlFor="location">Location</Label>
+                  <Input
+                    id="location"
+                    placeholder="Enter location"
+                    value={jobData.location}
+                    onChange={(e) => setJobData({ ...jobData, location: e.target.value })}
+                    required
+                  />
+                </div>
               </div>
 
               <div className="flex flex-col gap-1">
@@ -171,7 +176,8 @@ function CreatePostForm({ onPostCreated }) {
                   !jobData.location.trim())
             }
           >
-            <Send className="mr-2 h-4 w-4" /> Publish
+            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+            Publish
           </Button>
         </form>
       </CardContent>
